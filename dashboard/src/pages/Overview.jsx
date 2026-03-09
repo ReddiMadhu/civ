@@ -45,7 +45,7 @@ export default function Overview() {
             </div>
 
             {/* Portfolio totals */}
-            <div className="rounded-xl border border-border bg-card p-6">
+            <div className="rounded-xl border border-border bg-white p-6 shadow-sm">
                 <h2 className="text-base font-semibold text-foreground mb-4">Portfolio Totals</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     {[

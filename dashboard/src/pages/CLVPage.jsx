@@ -6,12 +6,11 @@ import { Badge } from "../components/ui/Card"
 import { fmtDollar, STATE_NAMES } from "../lib/utils"
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-    ScatterChart, Scatter, Cell, ReferenceLine,
+    Cell, ReferenceLine,
 } from "recharts"
 import { TrendingUp, TrendingDown, DollarSign, Activity } from "lucide-react"
 
-const TT_STYLE = { backgroundColor: "#1e2535", border: "1px solid #2d3a52", borderRadius: 8, color: "#e2e8f0", fontSize: 12 }
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#06b6d4"]
+const TT_STYLE = { backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, color: "#1e293b", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }
 
 export default function CLVPage() {
     const { data, loading } = useData()
@@ -25,8 +24,6 @@ export default function CLVPage() {
         const totalCLV = clvs.reduce((a, b) => a + b, 0)
         const posCount = clvs.filter(v => v > 0).length
         const negCount = clvs.filter(v => v < 0).length
-        const maxCLV = Math.max(...clvs)
-        const minCLV = Math.min(...clvs)
 
         // CLV by state
         const stateAgg = {}
@@ -64,11 +61,11 @@ export default function CLVPage() {
             buckets.push({ range: `$${lo / 1000 >= 0 ? '' : '-'}${Math.abs(lo / 1000).toFixed(0)}K`, count: cnt, lo })
         }
 
-        // Top 10 by CLV
+        // Top/Bottom 10
         const top10 = [...data].sort((a, b) => b._clv - a._clv).slice(0, 10)
         const bot10 = [...data].sort((a, b) => a._clv - b._clv).slice(0, 10)
 
-        return { avgCLV, totalCLV, posCount, negCount, maxCLV, minCLV, clvByState, clvByCredit, clvByChannel, buckets, top10, bot10, total: data.length }
+        return { avgCLV, totalCLV, posCount, negCount, clvByState, clvByCredit, clvByChannel, buckets, top10, bot10, total: data.length }
     }, [data])
 
     if (loading || !stats) {
@@ -82,7 +79,7 @@ export default function CLVPage() {
     const segmentCols = [
         { key: "rank", label: "#", sortable: false },
         { key: "segment", label: "Segment" },
-        { key: "avgCLV", label: "Avg CLV ($)", render: v => <span className={+v >= 0 ? "text-emerald-400" : "text-red-400"}>{fmtDollar(v)}</span> },
+        { key: "avgCLV", label: "Avg CLV ($)", render: v => <span className={+v >= 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>{fmtDollar(v)}</span> },
         { key: "count", label: "Policies" },
     ]
 
@@ -92,15 +89,17 @@ export default function CLVPage() {
         { key: "CREDITMODEL_CD", label: "Credit", render: v => { const m = { "INTRNL06": "Elite", "ASSIST01": "Avg", "ASSIST03": "Subprime" }; return <Badge variant={v === "INTRNL06" ? "success" : v === "ASSIST03" ? "destructive" : "muted"}>{m[v] || v}</Badge> } },
         { key: "DIRECTWRITTENPREMIUM_AM", label: "Premium", render: v => fmtDollar(v) },
         { key: "NETLOSS_PAID_AM", label: "Net Loss", render: v => fmtDollar(v) },
-        { key: "_clv", label: "CLV ($)", render: v => <span className={+v >= 0 ? "text-emerald-400 font-bold" : "text-red-400 font-bold"}>{fmtDollar(v)}</span> },
+        { key: "_clv", label: "CLV ($)", render: v => <span className={+v >= 0 ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>{fmtDollar(v)}</span> },
     ]
+
+    const BAR_COLORS = ["#6366f1", "#3b82f6", "#06b6d4", "#10b981", "#f59e0b", "#ef4444"]
 
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-foreground">CLV Analysis</h1>
                 <p className="text-muted-foreground text-sm mt-1">
-                    Discounted CLV = <code className="text-primary text-xs">(Premium − Comm − Admin − NetLoss) × Renewed / (1 + 0.08)</code>
+                    Discounted CLV = <code className="text-blue-600 text-xs bg-blue-50 px-1.5 py-0.5 rounded">(Premium − Comm − Admin − NetLoss) × Renewed / (1 + 0.08)</code>
                 </p>
             </div>
 
@@ -118,33 +117,42 @@ export default function CLVPage() {
                 <Card>
                     <CardHeader><CardTitle>CLV Distribution</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.buckets} barSize={20}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="range" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                                <defs>
+                                    <linearGradient id="gradPos" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#34d399" stopOpacity={0.5} />
+                                    </linearGradient>
+                                    <linearGradient id="gradNeg" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#ef4444" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#f87171" stopOpacity={0.5} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="range" tick={{ fill: "#64748b", fontSize: 10 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => [v.toLocaleString(), "Policies"]} />
-                                <ReferenceLine x={0} stroke="#ef4444" strokeDasharray="4 4" />
-                                <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                    {stats.buckets.map((b, i) => <Cell key={i} fill={b.lo >= 0 ? "#10b981" : "#ef4444"} />)}
+                                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                                    {stats.buckets.map((b, i) => <Cell key={i} fill={b.lo >= 0 ? "url(#gradPos)" : "url(#gradNeg)"} />)}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
 
-                {/* CLV by State Bar */}
+                {/* CLV by State */}
                 <Card>
                     <CardHeader><CardTitle>Avg CLV by State</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.clvByState} barSize={28}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="state" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v)} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="state" tick={{ fill: "#64748b", fontSize: 10 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v)} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => ["$" + v.toLocaleString(), "Avg CLV"]} />
-                                <Bar dataKey="avgCLV" radius={[4, 4, 0, 0]}>
-                                    {stats.clvByState.map((_, i) => <Cell key={i} fill={["#3b82f6", "#10b981", "#f59e0b", "#a855f7", "#06b6d4", "#ef4444"][i % 6]} />)}
+                                <Bar dataKey="avgCLV" radius={[6, 6, 0, 0]}>
+                                    {stats.clvByState.map((_, i) => <Cell key={i} fill={BAR_COLORS[i % 6]} />)}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -155,15 +163,19 @@ export default function CLVPage() {
                 <Card>
                     <CardHeader><CardTitle>Avg CLV by Credit Tier</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.clvByCredit} barSize={50}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="credit" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v)} />
+                                <defs>
+                                    <linearGradient id="gradIndigo" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#a5b4fc" stopOpacity={0.6} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="credit" tick={{ fill: "#64748b", fontSize: 12 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v)} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => ["$" + v.toLocaleString(), "Avg CLV"]} />
-                                <Bar dataKey="avgCLV" radius={[4, 4, 0, 0]}>
-                                    {stats.clvByCredit.map((_, i) => <Cell key={i} fill={["#3b82f6", "#f59e0b", "#ef4444"][i]} />)}
-                                </Bar>
+                                <Bar dataKey="avgCLV" fill="url(#gradIndigo)" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -173,15 +185,19 @@ export default function CLVPage() {
                 <Card>
                     <CardHeader><CardTitle>Avg CLV by Agent Channel</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.clvByChannel} barSize={50}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="channel" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v)} />
+                                <defs>
+                                    <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#06b6d4" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#67e8f9" stopOpacity={0.5} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="channel" tick={{ fill: "#64748b", fontSize: 12 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v)} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => ["$" + v.toLocaleString(), "Avg CLV"]} />
-                                <Bar dataKey="avgCLV" radius={[4, 4, 0, 0]}>
-                                    {stats.clvByChannel.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                                </Bar>
+                                <Bar dataKey="avgCLV" fill="url(#gradCyan)" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -196,7 +212,7 @@ export default function CLVPage() {
                         <div className="flex gap-2">
                             {[["state", "By State"], ["credit", "By Credit"], ["channel", "By Channel"]].map(([v, l]) => (
                                 <button key={v} onClick={() => setSegment(v)}
-                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${segment === v ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
+                                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${segment === v ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                                     {l}
                                 </button>
                             ))}
@@ -208,7 +224,7 @@ export default function CLVPage() {
                 </CardContent>
             </Card>
 
-            {/* Top / Bottom 10 tables */}
+            {/* Top / Bottom 10 */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <Card>
                     <CardHeader><CardTitle>🏆 Top 10 Highest CLV Policies</CardTitle></CardHeader>

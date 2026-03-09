@@ -32,7 +32,7 @@ const COLUMNS = [
             ? <Badge variant="destructive">Yes</Badge>
             : <Badge variant="muted">No</Badge>
     },
-    { key: "_clv", label: "CLV ($)", render: v => <span className={+v >= 0 ? "text-emerald-400" : "text-red-400"}>{fmtDollar(v)}</span> },
+    { key: "_clv", label: "CLV ($)", render: v => <span className={+v >= 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>{fmtDollar(v)}</span> },
 ]
 
 export default function DataTablePage() {

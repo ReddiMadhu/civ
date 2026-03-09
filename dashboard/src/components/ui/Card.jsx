@@ -1,8 +1,8 @@
-import { cn } from "../lib/utils"
+import { cn } from "../../lib/utils"
 
 export function Card({ className, children, ...props }) {
     return (
-        <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-lg", className)} {...props}>
+        <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className)} {...props}>
             {children}
         </div>
     )
@@ -22,23 +22,23 @@ export function CardContent({ className, children }) {
 
 export function KPICard({ title, value, subtitle, icon: Icon, color = "blue" }) {
     const colors = {
-        blue: "from-blue-500/20 to-blue-600/5 border-blue-500/30 text-blue-400",
-        green: "from-emerald-500/20 to-emerald-600/5 border-emerald-500/30 text-emerald-400",
-        amber: "from-amber-500/20 to-amber-600/5 border-amber-500/30 text-amber-400",
-        red: "from-red-500/20 to-red-600/5 border-red-500/30 text-red-400",
-        purple: "from-purple-500/20 to-purple-600/5 border-purple-500/30 text-purple-400",
+        blue: "from-blue-50 to-indigo-50 border-blue-200 text-blue-600",
+        green: "from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600",
+        amber: "from-amber-50 to-orange-50 border-amber-200 text-amber-600",
+        red: "from-rose-50 to-pink-50 border-rose-200 text-rose-600",
+        purple: "from-violet-50 to-purple-50 border-violet-200 text-violet-600",
     }
     return (
-        <div className={cn("rounded-xl border bg-gradient-to-br p-5 shadow-lg transition-all hover:scale-[1.02]", colors[color])}>
+        <div className={cn("rounded-xl border bg-gradient-to-br p-5 shadow-sm transition-all hover:shadow-md hover:scale-[1.02]", colors[color])}>
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{title}</p>
+                    <p className="text-xs font-medium uppercase tracking-wider mb-1 opacity-70">{title}</p>
                     <p className="text-2xl font-bold text-foreground truncate">{value}</p>
                     {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
                 </div>
                 {Icon && (
-                    <div className="rounded-lg bg-white/10 p-2.5 shrink-0">
-                        <Icon size={20} className={colors[color].split(" ").at(-1)} />
+                    <div className={cn("rounded-lg p-2.5 shrink-0 bg-white/60 shadow-sm")}>
+                        <Icon size={20} />
                     </div>
                 )}
             </div>
@@ -48,11 +48,11 @@ export function KPICard({ title, value, subtitle, icon: Icon, color = "blue" }) 
 
 export function Badge({ children, variant = "default" }) {
     const variants = {
-        default: "bg-primary/20 text-primary",
-        success: "bg-emerald-500/20 text-emerald-400",
-        warning: "bg-amber-500/20 text-amber-400",
-        destructive: "bg-red-500/20 text-red-400",
-        muted: "bg-muted text-muted-foreground",
+        default: "bg-blue-100 text-blue-700",
+        success: "bg-emerald-100 text-emerald-700",
+        warning: "bg-amber-100 text-amber-700",
+        destructive: "bg-rose-100 text-rose-700",
+        muted: "bg-gray-100 text-gray-600",
     }
     return (
         <span className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium", variants[variant])}>

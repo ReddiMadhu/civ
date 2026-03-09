@@ -4,11 +4,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card"
 import { STATE_NAMES, fmtDollar, fmtPct } from "../lib/utils"
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-    PieChart, Pie, Cell, Legend, ScatterChart, Scatter, LineChart, Line,
+    PieChart, Pie, Cell, Legend, LineChart, Line, Area, AreaChart,
+    defs as RechartsDefs,
 } from "recharts"
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#a855f7", "#06b6d4"]
-const TT_STYLE = { backgroundColor: "#1e2535", border: "1px solid #2d3a52", borderRadius: 8, color: "#e2e8f0", fontSize: 12 }
+const TT_STYLE = { backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, color: "#1e293b", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }
 
 export default function EDA() {
     const { data, loading } = useData()
@@ -91,6 +91,10 @@ export default function EDA() {
         return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading data…</div>
     }
 
+    const PIE_CREDIT = ["#6366f1", "#f59e0b", "#ef4444"]
+    const PIE_CONST = ["#3b82f6", "#10b981", "#f97316", "#8b5cf6"]
+    const PIE_CHAN = ["#6366f1", "#06b6d4", "#f59e0b", "#10b981", "#ef4444"]
+
     return (
         <div className="space-y-6">
             <div>
@@ -104,13 +108,19 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Loss Ratio by State (%)</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.lrByState} barSize={28}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="state" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} unit="%" domain={[0, 100]} />
+                                <defs>
+                                    <linearGradient id="gradBlue" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#818cf8" stopOpacity={0.7} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="state" tick={{ fill: "#64748b", fontSize: 11 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} unit="%" domain={[0, 'auto']} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => [v + "%", "Loss Ratio"]} />
-                                <Bar dataKey="lossRatio" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="lossRatio" fill="url(#gradBlue)" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -120,13 +130,19 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Premium Distribution</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.premDist} barSize={28}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="range" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                                <defs>
+                                    <linearGradient id="gradGreen" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#10b981" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#34d399" stopOpacity={0.6} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="range" tick={{ fill: "#64748b", fontSize: 10 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => [v.toLocaleString(), "Policies"]} />
-                                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="count" fill="url(#gradGreen)" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -136,10 +152,11 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Credit Tier Distribution</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <PieChart>
-                                <Pie data={stats.creditDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                                    {stats.creditDist.map((_, i) => <Cell key={i} fill={["#3b82f6", "#f59e0b", "#ef4444"][i]} />)}
+                                <Pie data={stats.creditDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={40}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} strokeWidth={2} stroke="#fff">
+                                    {stats.creditDist.map((_, i) => <Cell key={i} fill={PIE_CREDIT[i]} />)}
                                 </Pie>
                                 <Tooltip contentStyle={TT_STYLE} />
                             </PieChart>
@@ -151,10 +168,11 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Construction Type Mix</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <PieChart>
-                                <Pie data={stats.constDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                                    {stats.constDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                <Pie data={stats.constDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={40}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} strokeWidth={2} stroke="#fff">
+                                    {stats.constDist.map((_, i) => <Cell key={i} fill={PIE_CONST[i % PIE_CONST.length]} />)}
                                 </Pie>
                                 <Tooltip contentStyle={TT_STYLE} />
                             </PieChart>
@@ -162,18 +180,24 @@ export default function EDA() {
                     </CardContent>
                 </Card>
 
-                {/* Claim Freq by Merit Point */}
+                {/* Claim Freq by Merit Point — Area chart with gradient */}
                 <Card>
                     <CardHeader><CardTitle>Claim Frequency by Merit Point</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
-                            <LineChart data={stats.meritFreq}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="merit" label={{ value: "Merit Score", position: "insideBottom", offset: -2, fill: "#94a3b8", fontSize: 11 }} tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} unit="%" />
+                        <ResponsiveContainer width="100%" height={240}>
+                            <AreaChart data={stats.meritFreq}>
+                                <defs>
+                                    <linearGradient id="gradPurple" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.05} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="merit" label={{ value: "Merit Score", position: "insideBottom", offset: -2, fill: "#64748b", fontSize: 11 }} tick={{ fill: "#64748b", fontSize: 11 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} unit="%" />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => [v + "%", "Claim Freq"]} />
-                                <Line type="monotone" dataKey="freq" stroke="#a855f7" strokeWidth={2} dot={false} />
-                            </LineChart>
+                                <Area type="monotone" dataKey="freq" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#gradPurple)" />
+                            </AreaChart>
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
@@ -182,13 +206,19 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Avg Gross Loss by Home Age</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={stats.ageLoss} barSize={28}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="range" tick={{ fill: "#94a3b8", fontSize: 10 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v / 1000) + "K"} />
+                                <defs>
+                                    <linearGradient id="gradAmber" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
+                                        <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.6} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="range" tick={{ fill: "#64748b", fontSize: 10 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={v => "$" + Math.round(v / 1000) + "K"} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => ["$" + v.toLocaleString(), "Avg Gross Loss"]} />
-                                <Bar dataKey="avgLoss" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="avgLoss" fill="url(#gradAmber)" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -198,14 +228,14 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Renewal Rate by Credit Tier</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
-                            <BarChart data={stats.renewByCredit} barSize={40}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#2d3a52" />
-                                <XAxis dataKey="credit" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                                <YAxis tick={{ fill: "#94a3b8", fontSize: 11 }} unit="%" domain={[0, 100]} />
+                        <ResponsiveContainer width="100%" height={240}>
+                            <BarChart data={stats.renewByCredit} barSize={50}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis dataKey="credit" tick={{ fill: "#64748b", fontSize: 11 }} />
+                                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} unit="%" domain={[0, 100]} />
                                 <Tooltip contentStyle={TT_STYLE} formatter={v => [v + "%", "Renewal Rate"]} />
-                                <Bar dataKey="renewRate" radius={[4, 4, 0, 0]}>
-                                    {stats.renewByCredit.map((_, i) => <Cell key={i} fill={["#3b82f6", "#f59e0b", "#ef4444"][i]} />)}
+                                <Bar dataKey="renewRate" radius={[6, 6, 0, 0]}>
+                                    {stats.renewByCredit.map((_, i) => <Cell key={i} fill={PIE_CREDIT[i]} />)}
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -216,11 +246,11 @@ export default function EDA() {
                 <Card>
                     <CardHeader><CardTitle>Agent Channel Distribution</CardTitle></CardHeader>
                     <CardContent>
-                        <ResponsiveContainer width="100%" height={220}>
+                        <ResponsiveContainer width="100%" height={240}>
                             <PieChart>
-                                <Pie data={stats.channelDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                                    {stats.channelDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                <Pie data={stats.channelDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={40}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} strokeWidth={2} stroke="#fff">
+                                    {stats.channelDist.map((_, i) => <Cell key={i} fill={PIE_CHAN[i % PIE_CHAN.length]} />)}
                                 </Pie>
                                 <Legend iconType="circle" formatter={v => <span className="text-muted-foreground text-xs">{v}</span>} />
                                 <Tooltip contentStyle={TT_STYLE} />
